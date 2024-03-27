@@ -1,0 +1,1 @@
+create table teachers(TUSERNAME varchar(200), TPASSWORD varchar(100), CLASS varchar(100), DIVISION varchar(10), isApproved int, primary key (TUSERNAME));
