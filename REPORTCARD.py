@@ -99,40 +99,8 @@ class LoginPage:
         self.username_icon_label.image = photo
         self.username_icon_label.place(x=550, y=302)
 
-        # ========================================================================
-        # ============================login button================================
-        # ========================================================================
 
 
-        def login_users():
-            self.username = self.username_entry.get()
-            self.password = self.password_entry.get()
-            print(self.username , self.password)
-
-
-
-        self.lgn_button = Image.open('images\\btn1.png')
-        photo = ImageTk.PhotoImage(self.lgn_button)
-        self.lgn_button_label = Label(self.lgn_frame, image=photo, bg='#040405')
-        self.lgn_button_label.image = photo
-        self.lgn_button_label.place(x=550, y=450)
-        self.login = Button(self.lgn_button_label, text='LOGIN', font=("yu gothic ui", 13, "bold"), width=25, bd=0,
-                            bg='#3047ff', cursor='hand2', command = login_users,activebackground='#3047ff', fg='white')
-        self.login.place(x=20, y=10)
-
-        # ========================================================================
-        # =========== Sign Up ==================================================
-        # ========================================================================
-
-
-        self.sign_label = Label(self.lgn_frame, text='No account yet?', font=("yu gothic ui", 11, "bold"),
-                                relief=FLAT, borderwidth=0, background="#040405", fg='white')
-        self.sign_label.place(x=580, y=560)
-
-        self.signup_img = ImageTk.PhotoImage(file='images\\register.png')
-        self.signup_button_label = Button(self.lgn_frame, image=self.signup_img, bg='#98a65d', cursor="hand2",
-                                          borderwidth=0, background="#040405", command = self.signup_page, activebackground="#040405")
-        self.signup_button_label.place(x=720, y=555, width=111, height=35)
 
         # ========================================================================
         # ============================password====================================
@@ -165,6 +133,60 @@ class LoginPage:
                                   , borderwidth=0, background="white", cursor="hand2")
         self.show_button.place(x=860, y=390)
 
+
+
+
+
+
+        # ========================================================================
+        # ============================login button================================
+        # ========================================================================
+
+
+        def login_users():
+            self.username = self.username_entry.get()
+            self.password = self.password_entry.get()
+            # print(self.username , self.password)
+
+
+            cur.execute("select * from teachers where TUSERNAME=%s and TPASSWORD=%s and isApproved=1", (self.username, self.password))
+            user = cur.fetchone()
+            print(user)
+            if user:
+                messagebox.showinfo("Success", "Login successful!")
+                if user[0] == 'admin' and user[1] == "Admin@321" and user[2] == None and user[3] == None and user[4] == 1:
+                    admin_main(self.window)
+                    # entry_page(self.window)
+                else:
+                    entry_page(self.window)
+            else:
+                messagebox.showerror("ERROR", "Invalid Id Or Password")
+
+
+
+        self.lgn_button = Image.open('images\\btn1.png')
+        photo = ImageTk.PhotoImage(self.lgn_button)
+        self.lgn_button_label = Label(self.lgn_frame, image=photo, bg='#040405')
+        self.lgn_button_label.image = photo
+        self.lgn_button_label.place(x=550, y=450)
+        self.login = Button(self.lgn_button_label, text='LOGIN', font=("yu gothic ui", 13, "bold"), width=25, bd=0,
+                            bg='#3047ff', cursor='hand2', command = login_users,activebackground='#3047ff', fg='white')
+        self.login.place(x=20, y=10)
+
+        # ========================================================================
+        # =========== Sign Up ==================================================
+        # ========================================================================
+
+
+        self.sign_label = Label(self.lgn_frame, text='No account yet?', font=("yu gothic ui", 11, "bold"),
+                                relief=FLAT, borderwidth=0, background="#040405", fg='white')
+        self.sign_label.place(x=580, y=560)
+
+        self.signup_img = ImageTk.PhotoImage(file='images\\register.png')
+        self.signup_button_label = Button(self.lgn_frame, image=self.signup_img, bg='#98a65d', cursor="hand2",
+                                          borderwidth=0, background="#040405", command = self.signup_page, activebackground="#040405")
+        self.signup_button_label.place(x=720, y=555, width=111, height=35)
+
     def show(self):
         self.hide_button = Button(self.lgn_frame, image=self.hide_image, command=self.hide, relief=FLAT,
                                   activebackground="white"
@@ -178,6 +200,7 @@ class LoginPage:
                                   , borderwidth=0, background="white", cursor="hand2")
         self.show_button.place(x=860, y=390)
         self.password_entry.config(show='*')
+        
 
 
 
@@ -276,7 +299,7 @@ class LoginPage:
         self.hide_image = ImageTk.PhotoImage \
             (file='images\\hide.png')
 
-        self.show_button = Button(self.sgnp_frame, image=self.show_image, command=self.show, relief=FLAT,
+        self.show_button = Button(self.sgnp_frame, image=self.show_image, command=self.show_sgnup, relief=FLAT,
                                   activebackground="white"
                                   , borderwidth=0, background="white", cursor="hand2")
         self.show_button.place(x=860, y=320)
@@ -317,13 +340,30 @@ class LoginPage:
             self.new_teacher_division = self.division_combobox.get()
             self.new_teacher_isApproved = 0
 
-            cur.execute("INSERT INTO teachers VALUES (%s, %s, %s, %s, %s)",(self.new_teacher_username, self.new_teacher_password, self.new_teacher_class, self.new_teacher_division, self.new_teacher_isApproved))
+            cur.execute("select TUSERNAME from teachers")
+            username_list = cur.fetchall()
+            # print(username_list)
+            flag_found = False
+            for i in username_list:
+                if i[0] == self.new_teacher_username:
+                    flag_found = True
 
+            if flag_found == True:
+                messagebox.showerror("Error", "Username already exists!")
+                                
+            else:
+                cur.execute("INSERT INTO teachers VALUES (%s, %s, %s, %s, %s)",(self.new_teacher_username, self.new_teacher_password, self.new_teacher_class, self.new_teacher_division, self.new_teacher_isApproved))
 
-            messagebox.showinfo("Success", "Account created successfully!\nGo to Login Page.\nYour ID is: " + str(self.new_teacher_username) + " and Password is: " + self.new_teacher_password)
-            mydb.commit()
+                self.username_entry.delete(0,END)
+                self.password_entry.delete(0,END)
+                self.class_combobox.current(0)
+                self.division_combobox.current(0)
 
-            entry_page(self.window)
+                messagebox.showinfo("Success", "Account created successfully!\nGo to Login Page.\nYour ID is: " + str(self.new_teacher_username) + " and Password is: " + self.new_teacher_password)
+                mydb.commit()
+
+                self.back_to_login()
+            
 
         self.sgnp_button = Image.open('images\\btn1.png')
         photo = ImageTk.PhotoImage(self.sgnp_button)
@@ -348,15 +388,15 @@ class LoginPage:
         # Recreate the login frame
         self.create_login_frame()
 
-    def show(self):
-        self.hide_button = Button(self.sgnp_frame, image=self.hide_image, command=self.hide, relief=FLAT,
+    def show_sgnup(self):
+        self.hide_button = Button(self.sgnp_frame, image=self.hide_image, command=self.hide_sgnup, relief=FLAT,
                                   activebackground="white"
                                   , borderwidth=0, background="white", cursor="hand2")
         self.hide_button.place(x=860, y=320)
         self.password_entry.config(show='')
 
-    def hide(self):
-        self.show_button = Button(self.sgnp_frame, image=self.show_image, command=self.show, relief=FLAT,
+    def hide_sgnup(self):
+        self.show_button = Button(self.sgnp_frame, image=self.show_image, command=self.show_sgnup, relief=FLAT,
                                   activebackground="white"
                                   , borderwidth=0, background="white", cursor="hand2")
         self.show_button.place(x=860, y=320)
@@ -369,6 +409,138 @@ class entry_page:
         # Destroy all widgets within the window
         for widget in window.winfo_children():
             widget.destroy()
+
+
+
+def admin_main(window):
+    for widget in window.winfo_children():
+            widget.destroy()
+
+    screenheight = window.winfo_screenheight()
+    screenwidth = window.winfo_screenwidth() 
+    MENU_FRAME=Frame(window,relief=RIDGE,bg="lightblue",height=screenheight/8,width=screenwidth,borderwidth=5)
+    MENU_FRAME.place(x=0,y=0)
+
+    MAIN_FRAME=Frame(window,relief=RIDGE,bg="white",height=screenheight//1.5,width=screenwidth//1.25,borderwidth=4) 
+    MAIN_FRAME.place(x=150,y=150)
+
+    def add_teacher():
+        print("add_teacher")
+
+    def edit_teacher():
+        print("edit_teacher")
+
+    def update_year():
+        print("update_year")
+
+    def reports():
+        print("reports")
+
+
+    def approvals():
+
+        class ApproveTable(Frame):
+            def __init__(self, master, headings, data):
+                super().__init__(master)
+                self.master = master
+                self.headings = headings
+                self.data = data
+                self.create_table()
+
+            def create_table(self):
+
+
+
+                if not self.data:
+                    # If no data, display a message
+                    empty_label = Label(self, text="No pending approvals", padx=10, pady=5)
+                    empty_label.grid(row=0, column=0, columnspan=len(self.headings)+2, padx=5, pady=5)
+                    return
+                
+
+                
+                # Create heading labels
+                for j, heading in enumerate(self.headings):
+                    label = Label(self, text=heading, padx=10, pady=5, borderwidth=3, relief="solid", width=15)
+                    label.grid(row=0, column=j, padx=5, pady=5)
+
+
+                # Create data labels and buttons
+                for i, row_data in enumerate(self.data):
+                    for j, column_data in enumerate(row_data):
+                        label = Label(self, text=column_data, padx=10, pady=5, borderwidth=1, relief="solid", width=15)
+                        label.grid(row=i+1, column=j, padx=5, pady=5)
+
+                    yes_button = Button(self, text="Yes", command=lambda i=i: self.approve(i, True), width=8)
+                    yes_button.grid(row=i+1, column=len(row_data), padx=5, pady=5)
+
+                    no_button = Button(self, text="No", command=lambda i=i: self.approve(i, False), width=8)
+                    no_button.grid(row=i+1, column=len(row_data)+1, padx=5, pady=5)
+
+            def approve(self, index, approval):
+                if approval:
+                    # print(f"Approved: {self.data[index]}")
+                    cur.execute("UPDATE teachers SET isApproved = 1 WHERE TUSERNAME = '{}'".format(self.data[index][0]))
+                    mydb.commit()
+                else:
+                    # print(f"Not approved: {self.data[index]}")
+                    cur.execute("delete from teachers WHERE TUSERNAME = '{}'".format(self.data[index][0]))
+                    mydb.commit()
+                # Delete the row
+                del self.data[index]
+                self.refresh_table()
+
+            def refresh_table(self):
+                # Clear current widgets
+                for widget in self.winfo_children():
+                    widget.destroy()
+                # Recreate the table with updated data
+                self.create_table()
+
+
+        sample_headings  = ["TUSERNAME","TPASSWORD","CLASS","DIVISION","APPROVE","REJECT"]
+
+        cur.execute("SELECT TUSERNAME,TPASSWORD,CLASS,DIVISION FROM teachers WHERE isApproved = 0")
+        non_approved_teachers = cur.fetchall()
+        # print(non_approved_teachers)
+
+        approve_table = ApproveTable(MAIN_FRAME, sample_headings, non_approved_teachers)
+        approve_table.place(x=MAIN_FRAME.winfo_width()//6, y=10)
+
+    image_teacher= Image.open(r"images\teacher.png")
+    image_teacher= image_teacher.resize((55,55))
+    img_teacher= ImageTk.PhotoImage(image_teacher)
+    teacher_BTN=Button(MENU_FRAME,image = img_teacher,bg='lightblue',compound=TOP,text="ADD TEACHER",command=add_teacher,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
+    teacher_BTN.place(x=100,y=5)
+
+    image_edit= Image.open(r"images\user.png")
+    image_edit= image_edit.resize((55,55))
+    img_edit= ImageTk.PhotoImage(image_edit)
+    edit_BTN=Button(MENU_FRAME,image = img_edit,bg='lightblue',compound=TOP,text="EDIT TEACHER",command=edit_teacher,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
+    edit_BTN.place(x=250,y=5) 
+
+
+    image_year= Image.open(r"images\years.png")
+    image_year= image_year.resize((55,55))
+    img_year= ImageTk.PhotoImage(image_year)
+    year_BTN=Button(MENU_FRAME,image = img_year,bg='lightblue',compound=TOP,text="UPDATE YEAR",command=update_year,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
+    year_BTN.place(x=400,y=5) 
+
+
+    image_fees_report= Image.open(r"images\report.png")
+    image_fees_report= image_fees_report.resize((55,55))
+    img_fees_report= ImageTk.PhotoImage(image_fees_report)
+    FEES_REPORT_BTN=Button(MENU_FRAME,image = img_fees_report,bg='lightblue',compound=TOP,text="REPORTS",command=reports,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
+    FEES_REPORT_BTN.place(x=550,y=5) 
+
+    image_fees_approve= Image.open(r"images\approve.png")
+    image_fees_approve= image_fees_approve.resize((55,55))
+    img_fees_approve= ImageTk.PhotoImage(image_fees_approve)
+    FEES_approve_BTN=Button(MENU_FRAME,image = img_fees_approve,bg='lightblue',compound=TOP,text="Pending Approvals",command=approvals,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
+    FEES_approve_BTN.place(x=700,y=5) 
+
+
+    window.mainloop()
 
 
 def page():
