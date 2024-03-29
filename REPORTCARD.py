@@ -3,8 +3,11 @@
 from tkinter import *
 from PIL import ImageTk, Image
 from tkinter import ttk
+import tkinter as tk
 import mysql.connector as con
 from tkinter import messagebox
+from ttkwidgets.autocomplete import AutocompleteEntry
+
 
 mydb = con.connect(host="localhost",user="root",password="yash1234",database="airport_school1")
 cur = mydb.cursor()
@@ -160,7 +163,7 @@ class LoginPage:
                 else:
                     entry_page(self.window)
             else:
-                messagebox.showerror("ERROR", "Invalid Id Or Password")
+                messagebox.showerror("ERROR", "Invalid Id Or Password or Wait for Admin's Approval")
 
 
 
@@ -359,7 +362,7 @@ class LoginPage:
                 self.class_combobox.current(0)
                 self.division_combobox.current(0)
 
-                messagebox.showinfo("Success", "Account created successfully!\nGo to Login Page.\nYour ID is: " + str(self.new_teacher_username) + " and Password is: " + self.new_teacher_password)
+                messagebox.showinfo("Success", "Account created successfully!\nAsk admin to approve you.\n\nYour ID is: " + str(self.new_teacher_username) + " and Password is: " + self.new_teacher_password)
                 mydb.commit()
 
                 self.back_to_login()
@@ -428,10 +431,141 @@ def admin_main(window):
         print("add_teacher")
 
     def edit_teacher():
-        print("edit_teacher")
+        for widget in MAIN_FRAME.winfo_children():
+            widget.destroy()
 
-    def update_year():
-        print("update_year")
+        # Increase label font size
+        label_font = ('Arial', 15)
+
+        # Calculate the center x-coordinate of MAIN_FRAME
+        main_frame_width = MAIN_FRAME.winfo_reqwidth()
+        main_frame_center_x = main_frame_width // 2
+
+        # Calculate the width of the labels and entries
+        label_width = 140
+        entry_width = 30
+
+        # Space between label and entry
+        space_between = 40
+
+        # Calculate the space on the left and right of labels and entries
+        side_space = (main_frame_width - (label_width + entry_width + space_between)) // 3
+
+
+
+        # Labels
+        username_label = Label(MAIN_FRAME, text="Username:", bg="white", font=label_font, padx=5, pady=10, anchor="e")
+        username_label.place(x=side_space, y=20)
+
+        password_label = Label(MAIN_FRAME, text="Password:", bg="white", font=label_font, padx=5, pady=10, anchor="e")
+        password_label.place(x=side_space, y=70)
+
+        class_label = Label(MAIN_FRAME, text="Class:", bg="white", font=label_font, padx=5, pady=10, anchor="e")
+        class_label.place(x=side_space, y=120)
+
+        division_label = Label(MAIN_FRAME, text="Division:", bg="white", font=label_font, padx=5, pady=10, anchor="e")
+        division_label.place(x=side_space, y=170)
+
+        approve_label = Label(MAIN_FRAME, text="Approve:", bg="white", font=label_font, padx=5, pady=10, anchor="e")
+        approve_label.place(x=side_space, y=220)
+
+        # Increase entry font size
+        entry_font = ('Arial', 15)
+
+        # Get the list of usernames from the database   
+        cur.execute("select TUSERNAME from teachers")
+        data = cur.fetchall()
+        username_list = []
+        for i in data:
+            if i[0] == 'admin':
+                continue
+            else:
+                username_list.append(i[0])
+
+
+        
+
+
+        # Entry fields
+        username_entry = AutocompleteEntry(MAIN_FRAME, width=entry_width, completevalues=username_list, font=entry_font)
+        username_entry.place(x=side_space + label_width + space_between, y=30)
+
+        password_entry = Entry(MAIN_FRAME, width=entry_width, bg="#FFFFF0", font=entry_font)
+        password_entry.place(x=side_space + label_width + space_between, y=80)
+
+        class_entry = ttk.Combobox(MAIN_FRAME, state="readonly", values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], width=entry_width, font=entry_font)
+        class_entry.place(x=side_space + label_width + space_between, y=130)
+
+        division_entry = ttk.Combobox(MAIN_FRAME, state="readonly", values=['A', 'B', 'C', 'D'], width=entry_width, font=entry_font)
+        division_entry.place(x=side_space + label_width + space_between, y=180)
+
+        approve_var = IntVar()
+        approve_check = Checkbutton(MAIN_FRAME, bg="white", variable=approve_var)
+        approve_check.place(x=side_space + label_width + space_between, y=230)
+
+
+        def fill_details(event=None):
+            # Get the entered username
+            entered_username = username_entry.get()
+
+            # Fetch details from the database based on the entered username
+            cur.execute("SELECT TUSERNAME, TPASSWORD, CLASS, DIVISION, isApproved FROM teachers WHERE TUSERNAME = %s", (entered_username,))
+            data = cur.fetchone()  # Assuming there's only one matching record
+
+            # Check if data is found
+            if data:
+                # Fill the entry fields with the retrieved data
+                # username_entry.insert(data[0])
+                password_entry.delete(0, END)
+                password_entry.insert(0, data[1])
+                class_entry.set(data[2])
+                division_entry.set(data[3])
+                if data[4] == 1:
+                    approve_check.select()
+                else:
+                    approve_check.deselect(0)
+
+        # Bind the fill_details function to the Enter key event of the autocomplete entry
+        username_entry.bind('<Return>', fill_details)
+
+        def save_details():
+            entered_username = username_entry.get()
+            if not entered_username:
+                messagebox.showerror("Error!", "Username cannot be empty!")
+            else:
+                tecaher_password = password_entry.get()
+                teacher_class = class_entry.get()
+                techaer_division = division_entry.get()
+                teacher_approve = approve_var.get()
+
+                # print("Username:", username)
+                # print("Password:", password)
+                # print("Class:", teacher_class)
+                # print("Division:", division)
+                # print("Approve:", approve)
+
+                cur.execute("update teachers set TPASSWORD = %s, CLASS = %s, DIVISION = %s, isApproved = %s where TUSERNAME = %s",(tecaher_password,teacher_class,techaer_division,teacher_approve,entered_username))
+
+                mydb.commit()
+
+                username_entry.delete(0,END)
+                password_entry.delete(0,END)
+                class_entry.set('')
+                division_entry.set('')
+                approve_check.deselect()
+
+                messagebox.showinfo("Succes","{}'s Details Updated Successfully!".format(entered_username))
+
+        # Save button
+        save_button = Button(MAIN_FRAME, text="Save", command=save_details, bg="#3047ff", fg="white", width=10, font=('Arial', 20))
+        save_button.place(x=main_frame_center_x - 50, y=270)
+
+
+
+
+
+
+
 
     def reports():
         print("reports")
@@ -519,25 +653,17 @@ def admin_main(window):
     edit_BTN=Button(MENU_FRAME,image = img_edit,bg='lightblue',compound=TOP,text="EDIT TEACHER",command=edit_teacher,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
     edit_BTN.place(x=250,y=5) 
 
-
-    image_year= Image.open(r"images\years.png")
-    image_year= image_year.resize((55,55))
-    img_year= ImageTk.PhotoImage(image_year)
-    year_BTN=Button(MENU_FRAME,image = img_year,bg='lightblue',compound=TOP,text="UPDATE YEAR",command=update_year,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
-    year_BTN.place(x=400,y=5) 
-
-
     image_fees_report= Image.open(r"images\report.png")
     image_fees_report= image_fees_report.resize((55,55))
     img_fees_report= ImageTk.PhotoImage(image_fees_report)
     FEES_REPORT_BTN=Button(MENU_FRAME,image = img_fees_report,bg='lightblue',compound=TOP,text="REPORTS",command=reports,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
-    FEES_REPORT_BTN.place(x=550,y=5) 
+    FEES_REPORT_BTN.place(x=400,y=5) 
 
     image_fees_approve= Image.open(r"images\approve.png")
     image_fees_approve= image_fees_approve.resize((55,55))
     img_fees_approve= ImageTk.PhotoImage(image_fees_approve)
     FEES_approve_BTN=Button(MENU_FRAME,image = img_fees_approve,bg='lightblue',compound=TOP,text="Pending Approvals",command=approvals,padx=2,pady=2,activebackground='lightblue',relief=FLAT)
-    FEES_approve_BTN.place(x=700,y=5) 
+    FEES_approve_BTN.place(x=550,y=5) 
 
 
     window.mainloop()
