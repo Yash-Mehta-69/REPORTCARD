@@ -1220,7 +1220,553 @@ def teacher_main(user,window):
             LoginPage(window)
 
     def add_term2_marks():
-        print("Add Term 2 marks")
+
+
+        for widget in window.winfo_children():
+            widget.destroy()
+
+        
+        standard = user[2] + "-" +user[3]
+        STANDARD_CLASS = standard.split("-")[0]
+        # print(STANDARD_CLASS)
+
+
+
+
+        cur.execute("SELECT standard, subjects FROM standard_wise_subjects")
+
+        # Fetch all rows from the result
+        rows = cur.fetchall()
+
+        # Create an empty dictionary to store subject lists
+        subjects_dict = {}
+
+        # Process fetched data and populate the dictionary
+        for row in rows:
+            standard_1 = row[0]
+            subjects_list_1 = ast.literal_eval(row[1])  # Convert string representation of list to actual list
+            subjects_dict[standard_1] = subjects_list_1
+
+        # print(subjects_dict)
+
+        if STANDARD_CLASS in subjects_dict:
+            subject_list = subjects_dict[STANDARD_CLASS]
+
+        print(subject_list)
+        # Assuming you have a list of subjects for a particular standard
+        # subject_list = ['english', 'hindi' , 'maths', 'evs', 'gujarati', 'computer', 'gk']
+
+        # Generate column definitions for each subject
+        column_definitions = []
+        for subject in subject_list:
+            for term in ['pt_2', 'nb_1', 'sea_1', 'half_yearly', 'pt_2', 'nb_2', 'sea_2', 'annual_yearly']:
+                column_name = f"{subject}_{term}"
+                column_definition = f"{column_name} VARCHAR(50)"
+                column_definitions.append(column_definition)
+
+        # Additional columns
+        additional_columns = [
+            "gr_no INT PRIMARY KEY",
+            "attendence_1 VARCHAR(50)",
+            "out_of_1 VARCHAR(50)",
+            "work_education_1 VARCHAR(50)",
+            "art_education_1 VARCHAR(50)",
+            "health_physical_education_1 VARCHAR(50)",
+            "discipline_1 VARCHAR(50)",
+            "height_in_cm_1 VARCHAR(50)",
+            "weight_in_kg_1 VARCHAR(50)",
+            "remarks_1 VARCHAR(50)",
+            "attendence_2 VARCHAR(50)",
+            "out_of_2 VARCHAR(50)",
+            "work_education_2 VARCHAR(50)",
+            "art_education_2 VARCHAR(50)",
+            "health_physical_education_2 VARCHAR(50)",
+            "discipline_2 VARCHAR(50)",
+            "height_in_cm_2 VARCHAR(50)",
+            "weight_in_kg_2 VARCHAR(50)",
+            "remarks_2 VARCHAR(50)"
+        ]
+
+        # Combine all column definitions
+        all_columns = ",\n".join(column_definitions + additional_columns)
+
+        # Generate the final CREATE TABLE query
+        create_table_query = f'''CREATE TABLE if not exists `{STANDARD_CLASS}` (
+        {all_columns}
+        )'''
+
+        # print(create_table_query)
+        cur.execute(create_table_query)
+        mydb.commit()
+
+
+        def fetch_data_from_mysql(query):
+            cur.execute(query)
+            result = cur.fetchall()
+            return result
+        
+
+        def process_data(current_gr_no):
+            global current_index
+            # print(current_index)
+            
+            if next_button['text'] == "Next":
+                # Update attendance before updating marks
+                attendance_value = attendance_entry.get()
+                out_of_entry_value = out_of_entry.get()
+                height_entry_value = height_entry.get()
+                weight_entry_value = weight_entry.get()
+                work_edu_value = work_edu_entry.get()
+                art_edu_value = art_edu_entry.get()
+                hp_edu_value = hp_edu_entry.get()
+                discipline_value = discipline_entry.get()
+                remarks_value = remarks_entry.get()
+                update_attendance(attendance_value,out_of_entry_value,height_entry_value,weight_entry_value,work_edu_value,art_edu_value,hp_edu_value,discipline_value,remarks_value,current_gr_no)
+                update_marks_if_gr_no_matches(current_gr_no)
+                
+
+            # Update visibility of the "Next" button
+            if current_index == len(student_data) -1:
+                try:
+                    next_button.pack_forget()
+                    # Show a dialog box when reaching the last record
+                    result = messagebox.askquestion("Data Updated", "Data is updated. Do you want to close the window?")
+                    if result == 'yes':
+                        window.destroy()  # Close the window if user clicks "Yes"
+                    else:
+                        current_index = 0  # Restart from the first record if user clicks "No"
+                        tree.delete(*tree.get_children())
+                        tree.insert('', 'end', values=student_data[current_index])
+                        next_button.pack(side=tk.RIGHT)
+                        previous_button.pack_forget()  # Hide the "Previous" button initially
+                        fetch_and_populate_data(student_data[current_index][5])
+                        
+                except TclError:
+                    pass
+            
+            else:
+                try:
+                    next_button.pack(side=tk.RIGHT)
+                    current_index = (current_index + 1) % len(student_data)
+                    tree.delete(*tree.get_children())
+                    tree.insert('', 'end', values=student_data[current_index])
+                    # Fetch and populate data for the next record
+                    fetch_and_populate_data(student_data[current_index][5])
+                except TclError:
+                    pass
+
+            # Update visibility of the "Previous" button
+            if current_index == 0:
+                try:
+                    previous_button.pack_forget()  # Hide the "Previous" button if it's the first record
+                except TclError:
+                    pass
+            else:
+                try:
+                    previous_button.pack(side=tk.LEFT)  # Show the "Previous" button for all other records
+                except TclError:
+                    pass 
+
+
+        def fetch_and_populate_data(current_gr_no):
+
+            # Initialize the query string
+            data_query = f"""
+                SELECT 
+                attendence_2,
+                out_of_2,
+                work_education_2,
+                art_education_2,
+                health_physical_education_2,
+                discipline_2,
+                height_in_cm_2,
+                weight_in_kg_2,
+                remarks_2,
+            """
+
+            # Iterate over the subjects list
+            for subject in subject_list:
+                # Concatenate columns for each subject
+                data_query += f"""
+                    {subject}_pt_2, {subject}_nb_2, {subject}_sea_2, {subject}_annual_yearly,"""
+
+            # Remove the trailing comma and add the final part of the query
+            data_query = data_query[:-1]  # Remove the trailing comma
+            data_query += f"""
+                FROM `{STANDARD_CLASS}`
+                WHERE gr_no = "{current_gr_no}"
+            """
+            #print(data_query)
+            cur.execute(data_query)
+            data_row = cur.fetchone()
+            #print(data_row)
+
+            if data_row:
+                attendance_value = data_row[0] if data_row[0] is not None else "0"  # Set a default value if attendance_value is None
+                attendance_entry.delete(0, 'end')  # Clear existing value
+                attendance_entry.insert(0, attendance_value)  # Set fetched attendance value
+                
+                out_of_value = data_row[1] if data_row[1] is not None else "0"  # Set a default value if out_of_value is None
+                out_of_entry.delete(0, 'end')  # Clear existing value
+                out_of_entry.insert(0, out_of_value)  # Set fetched out_of value
+
+                work_education_value = data_row[2] if data_row[2] is not None else options[0]  # Set a default value if work_education_value is None
+                work_edu_entry.delete(0, 'end')  # Clear existing value
+                work_edu_entry.set(work_education_value)  # Set fetched work_education value
+
+                art_education_value = data_row[3] if data_row[3] is not None else options[0]  # Set a default value if art_education_value is None
+                art_edu_entry.delete(0, 'end')  # Clear existing value
+                art_edu_entry.set( art_education_value)  # Set fetched art_education value
+
+                health_physical_education_value = data_row[4] if data_row[4] is not None else options[0]  # Set a default value if health_physical_education_value is None
+                hp_edu_entry.delete(0, 'end')  # Clear existing value
+                hp_edu_entry.set( health_physical_education_value)  # Set fetched health_physical_education value
+
+                discipline_value = data_row[5] if data_row[5] is not None else options[0]  # Set a default value if discipline_value is None
+                discipline_entry.delete(0, 'end')  # Clear existing value
+                discipline_entry.set( discipline_value)  # Set fetched discipline value
+
+                height_in_cm_value = data_row[6] if data_row[6] is not None else "0"  # Set a default value if height_in_cm_value is None
+                height_entry.delete(0, 'end')  # Clear existing value
+                height_entry.insert(0, height_in_cm_value)  # Set fetched height_in_cm value
+
+                weight_in_kg_value = data_row[7] if data_row[7] is not None else "0"  # Set a default value if weight_in_kg_value is None
+                weight_entry.delete(0, 'end')  # Clear existing value
+                weight_entry.insert(0, weight_in_kg_value)  # Set fetched weight_in_kg value
+
+                remarks_value = data_row[8] if data_row[8] is not None else options1[0]  # Set a default value if remarks_value is None
+                remarks_entry.delete(0, 'end')  # Clear existing value
+                remarks_entry.set( remarks_value)  # Set fetched remarks value
+
+
+                # Update the entry fields with fetched marks data
+                for i, marks_value in enumerate(data_row[9:]):
+                    # Use '0' as default value if marks_value is None
+                    marks_value = marks_value if marks_value is not None else '0'
+                    entries[i].delete(0, 'end')  # Clear existing value
+                    entries[i].insert('end', marks_value)  # Set fetched marks value
+
+
+            else:
+                # If no data found, populate the entry fields with zeros
+                attendance_entry.delete(0, 'end')  # Clear existing value
+                attendance_entry.insert(0, '0')  # Set default value to 0
+                for entry in entries:
+                    entry.delete(0, 'end')  # Clear existing value
+                    entry.insert('end', '0')  # Set default value to 0
+
+        def display_previous_record():
+            global current_index
+            current_index = (current_index - 1) % len(student_data)
+            tree.delete(*tree.get_children())
+            tree.insert('', 'end', values=student_data[current_index])
+            fetch_and_populate_data(student_data[current_index][5])
+
+            # Update visibility of the "Previous" button
+            if current_index == 0:
+                try:
+                    previous_button.pack_forget()  # Hide the "Previous" button if it's the first record
+                except TclError:
+                    pass
+            else:
+                try:
+                    previous_button.pack(side=tk.LEFT)  # Show the "Previous" button for all other records
+                except TclError:
+                    pass 
+
+
+        def update_attendance(attendance_value,out_of_entry_value,height_entry_value,weight_entry_value,work_edu_value,art_edu_value,hp_edu_value,discipline_value,remarks_value,current_gr_no):    
+            # Defining the query to update attendance in the table for the current student
+            update_query = f'''
+            UPDATE `{STANDARD_CLASS}` 
+            SET
+            attendence_2 = '{attendance_value}',
+            out_of_2 = '{out_of_entry_value}',
+            work_education_2 = '{work_edu_value}',
+            art_education_2 = '{art_edu_value}',      
+            health_physical_education_2 = '{hp_edu_value}',
+            discipline_2 = '{discipline_value}',
+            height_in_cm_2 = '{height_entry_value}',          
+            weight_in_kg_2 = '{weight_entry_value}',
+            remarks_2 = '{remarks_value}'
+            WHERE gr_no = "{current_gr_no}"
+            '''
+
+            
+            # Executing the update query
+            cur.execute(update_query)
+            mydb.commit()
+
+
+        def update_marks_if_gr_no_matches(gr_no):
+            
+            # Defining the query to check if GR_NO already exists in the target table
+            check_query = f'''
+            SELECT gr_no 
+            FROM `{STANDARD_CLASS}` 
+            WHERE gr_no = "{gr_no}"
+            '''
+            # Executing the check query
+            cur.execute(check_query)
+            # Fetching the result of the check query
+            existing_gr_no = cur.fetchone()
+            
+            # If GR_NO exists in the target table, update the marks
+            if existing_gr_no:
+                # Fetch the marks data from the entry fields
+                marks_data = []
+                #print(marks_data)
+                for entry in entries:
+                    marks_data.append(entry.get())
+                    
+
+                # Initialize the update query
+                update_query = f'''
+                UPDATE `{STANDARD_CLASS}` 
+                SET 
+                '''
+
+                # Loop through the subject list to dynamically construct the SET clause of the update query
+                for index, subject in enumerate(subject_list):
+                    # Construct column names dynamically based on subject
+                    pt1_column = f'{subject}_pt_2'
+                    nb_1_column = f'{subject}_nb_2'
+                    sea_1_column = f'{subject}_sea_2'
+                    half_yearly_column = f'{subject}_annual_yearly'
+
+                    # Append the dynamically constructed column names and placeholders to the update query
+                    update_query += f'''
+                    {pt1_column} = '{marks_data[subject_list.index(subject) * 4]}',
+                    {nb_1_column} = '{marks_data[subject_list.index(subject) * 4 + 1]}',
+                    {sea_1_column} = '{marks_data[subject_list.index(subject) * 4 + 2]}',
+                    {half_yearly_column} = '{marks_data[subject_list.index(subject) * 4 + 3]}'
+                    '''
+                    # Check if it's the last subject, if not, add a comma
+                    if index < len(subject_list) - 1:
+                        update_query += ','
+
+                # Add the WHERE clause
+                update_query += f'''
+                WHERE gr_no = {gr_no}
+                '''
+
+                # Print or execute the update_query
+                # print(update_query)
+                cur.execute(update_query)
+                mydb.commit()
+
+        
+        global current_index  # Define current_index as a global variable
+        current_index = 0
+
+        screenheight = window.winfo_screenheight()
+        screenwidth = window.winfo_screenwidth() 
+
+        MAIN_FRAME = tk.Frame(window, relief=tk.RIDGE, bg="white", height=screenheight//1.2, width=screenwidth//1.2, borderwidth=4) 
+        MAIN_FRAME.place(x=(screenwidth-screenwidth//1.2)//2, y=(screenheight-screenheight//1.2)//2)
+
+
+        student_data_query = f'''
+        SELECT 
+            CONCAT(gr_details.NAME, ' ', gr_details.SURNAME) AS full_name,
+            gr_details.FATHER, 
+            gr_details.MOTHER, 
+            gr_details.BIRTH_DATE, 
+            academic_detail.roll_no,
+            gr_details.GR_NO, 
+            CONCAT(academic_detail.curr_std, '-', academic_detail.division) AS class_info 
+        FROM 
+            gr_details
+        JOIN 
+            academic_detail 
+        ON 
+            gr_details.GR_NO = academic_detail.gr_no 
+        WHERE 
+            CONCAT(academic_detail.curr_std, '-', academic_detail.division) = "{standard}"
+        '''
+        
+        
+        # print(student_data_query)
+        student_data = fetch_data_from_mysql(student_data_query)
+
+        student_frame = tk.Frame(MAIN_FRAME)
+        student_frame.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
+
+        tree_style = ttk.Style()
+        tree_style.theme_use("clam")
+        tree_style.configure("Treeview", background="white", fieldbackground="white", font=('Arial', 12))
+
+        tree = ttk.Treeview(student_frame, columns=("Name", "FathersName", "MothersName", "DOB", "RollNo", "GrNo", "Class"), show='headings', height=2)
+        tree.heading("Name", text="Name")
+        tree.heading("FathersName", text="Father's Name")
+        tree.heading("MothersName", text="Mother's Name")
+        tree.heading("DOB", text="DOB")
+        tree.heading("RollNo", text="Roll No")
+        tree.heading("GrNo", text="GR No")
+        tree.heading("Class", text="Class")
+
+        tree.column("Name", width=170, anchor='center')
+        tree.column("FathersName", width=170, anchor='center')
+        tree.column("MothersName", width=170, anchor='center')
+        tree.column("DOB", width=100, anchor='center')
+        tree.column("RollNo", width=100, anchor='center')
+        tree.column("GrNo", width=100, anchor='center')
+        tree.column("Class", width=100, anchor='center')
+
+        if student_data:
+            tree.insert('', 'end', values=student_data[current_index])
+
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, padx=10, pady=10)
+
+        subject_frame = tk.Frame(MAIN_FRAME)
+        subject_frame.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.4)
+
+        tk.Label(subject_frame, text="Scholastic Areas", width=20, font=('Arial', 14)).grid(row=0, column=0)
+        tk.Label(subject_frame, text="Subjects", width=20, font=('Arial', 14)).grid(row=1, column=0)
+
+        terms = ["PT 2", "N.B", "SEA", "HALF YEARLY"]
+        for j, term in enumerate(terms):
+            tk.Label(subject_frame, text=term, width=10, font=('Arial', 12)).grid(row=1, column=j + 1)
+
+
+
+        entries = []
+        # Calculate maximum width needed for labels
+        max_label_width = max([len(subject) for subject in subject_list]) + 2
+
+        for i, subject in enumerate(subject_list):
+            tk.Label(subject_frame, text=subject, width=max_label_width, font=('Arial', 12),justify=LEFT).grid(row=i + 2, column=0)
+            for j in range(len(terms)):
+                entry = tk.Entry(subject_frame, width=10, font=('Arial', 12))
+                entry.insert('end', '0')  # Set default value to 0
+                entry.grid(row=i + 2, column=j + 1)
+                entries.append(entry)
+
+        for student in student_data:
+            # Extracting GR_NO from the student data
+            gr_no = student[5]  # Assuming GR_NO is at index 5
+            # Defining the query to check if GR_NO already exists in the target table
+            check_query = f'''
+            SELECT gr_no 
+            FROM `{STANDARD_CLASS}` 
+            WHERE gr_no = "{gr_no}"
+            '''
+            # Executing the check query
+            cur.execute(check_query)
+            # Fetching the result of the check query
+            existing_gr_no = cur.fetchone()
+            # If GR_NO doesn't exist in the target table, insert it
+            if not existing_gr_no:
+                # Defining the query to insert GR_NO into another table
+                insert_query = f'''
+                INSERT INTO `{STANDARD_CLASS}` (gr_no) 
+                VALUES ({gr_no})
+                '''
+                # Executing the insert query
+                cur.execute(insert_query)
+        mydb.commit()
+
+
+        additional_entries_frame = tk.Frame(MAIN_FRAME)
+        additional_entries_frame.place(relx=0.02, rely=0.6, relwidth=0.96, relheight=0.2)
+
+        # First column
+        attendance_label = tk.Label(additional_entries_frame, text="Attendance")
+        attendance_label.grid(row=0, column=0, sticky='e', padx=10, pady=5)
+        attendance_entry = tk.Entry(additional_entries_frame, width=10)
+        attendance_entry.insert('end', '0')
+        attendance_entry.grid(row=0, column=1, sticky='w', padx=10, pady=5)
+
+        height_label = tk.Label(additional_entries_frame, text="Height")
+        height_label.grid(row=1, column=0, sticky='e', padx=10, pady=5)
+        height_entry = tk.Entry(additional_entries_frame, width=10)
+        height_entry.insert('end', '0')
+        height_entry.grid(row=1, column=1, sticky='w', padx=10, pady=5)
+
+
+        # Second column
+        out_of_label = tk.Label(additional_entries_frame, text="Out of")
+        out_of_label.grid(row=0, column=2, sticky='e', padx=10, pady=5)
+        out_of_entry = tk.Entry(additional_entries_frame, width=10)
+        out_of_entry.insert('end', '0')
+        out_of_entry.grid(row=0, column=3, sticky='w', padx=10, pady=5)
+
+        weight_label = tk.Label(additional_entries_frame, text="Weight")
+        weight_label.grid(row=1, column=2, sticky='e', padx=10, pady=5)
+        weight_entry = tk.Entry(additional_entries_frame, width=10)
+        weight_entry.insert('end', '0')
+        weight_entry.grid(row=1, column=3, sticky='w', padx=10, pady=5)
+
+        # Third column
+        options = ['A', 'B', 'C', 'D', 'E', 'F']
+        work_edu_label = tk.Label(additional_entries_frame, text="Work Education")
+        work_edu_label.grid(row=0, column=4, sticky='e', padx=10, pady=5)
+        work_edu_entry = ttk.Combobox(additional_entries_frame, values=options)
+        work_edu_entry.grid(row=0, column=5, sticky='w', padx=10, pady=5)
+        work_edu_entry.set(options[0])
+
+        art_edu_label = tk.Label(additional_entries_frame, text="Art Education")
+        art_edu_label.grid(row=1, column=4, sticky='e', padx=10, pady=5)
+        art_edu_entry = ttk.Combobox(additional_entries_frame, values=options)
+        art_edu_entry.grid(row=1, column=5, sticky='w', padx=10, pady=5)
+        art_edu_entry.set(options[0])
+
+        hp_edu_label = tk.Label(additional_entries_frame, text="Health and Physical Education")
+        hp_edu_label.grid(row=2, column=4, sticky='e', padx=10, pady=5)
+        hp_edu_entry = ttk.Combobox(additional_entries_frame, values=options)
+        hp_edu_entry.grid(row=2, column=5, sticky='w', padx=10, pady=5)
+        hp_edu_entry.set(options[0])
+
+        discipline_label = tk.Label(additional_entries_frame, text="Discipline")
+        discipline_label.grid(row=3, column=4, sticky='e', padx=10, pady=5)
+        discipline_entry = ttk.Combobox(additional_entries_frame, values=options)
+        discipline_entry.grid(row=3, column=5, sticky='w', padx=10, pady=5)
+        discipline_entry.set(options[0])
+
+        options1 = ["good", "bad"]
+        remarks_label = tk.Label(additional_entries_frame, text="Remarks")
+        remarks_label.grid(row=0, column=6, sticky='e', padx=10, pady=5)
+        remarks_entry = ttk.Combobox(additional_entries_frame, values=options1)
+        remarks_entry.grid(row=0, column=7, sticky='w', padx=10, pady=5)
+        remarks_entry.set(options1[0])
+
+
+
+
+
+
+
+
+
+
+        buttons_frame = tk.Frame(MAIN_FRAME)
+        buttons_frame.place(relx=0.02, rely=0.86, relwidth=0.96, relheight=0.1)
+
+        previous_button = tk.Button(buttons_frame, text="Previous", font=('Arial', 12), command=display_previous_record)
+        previous_button.pack(side=tk.LEFT, padx=10, pady=5)
+
+
+        next_button = tk.Button(buttons_frame, text="Next", font=('Arial', 12), command=lambda: process_data(student_data[current_index][5]))
+        next_button.pack(side=tk.RIGHT, padx=10, pady=5)
+
+        # Fetch and populate data for the first student
+        if student_data:
+            fetch_and_populate_data(student_data[current_index][5])
+            # Update visibility of the "Previous" button
+            if current_index == 0:
+                try:
+                    previous_button.pack_forget()  # Hide the "Previous" button if it's the first record
+                except TclError:
+                    pass
+            else:
+                try:
+                    previous_button.pack(side=tk.LEFT)  # Show the "Previous" button for all other records
+                except TclError:
+                    pass 
+
+        else:
+            messagebox.showerror("Error","Data is not found!")
+            LoginPage(window)
 
     def generate_results():
         print("Generate Results")
