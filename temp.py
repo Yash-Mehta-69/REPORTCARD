@@ -1073,24 +1073,25 @@ def teacher_main(user,window):
         subject_frame.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.4)
 
         tk.Label(subject_frame, text="Scholastic Areas", width=20, font=('Arial', 14)).grid(row=0, column=0)
+        tk.Label(subject_frame, text="TERM - 1 ", width=20, font=('Arial', 14)).grid(row=0, column=2,columnspan=2)
         tk.Label(subject_frame, text="Subjects", width=20, font=('Arial', 14)).grid(row=1, column=0)
 
         terms = ["PT 1", "N.B", "SEA", "HALF YEARLY"]
         for j, term in enumerate(terms):
-            tk.Label(subject_frame, text=term, width=10, font=('Arial', 12)).grid(row=1, column=j + 1)
+            tk.Label(subject_frame, text=term, width=15, font=('Arial', 12)).grid(row=1, column=j + 1)
 
 
 
         entries = []
         # Calculate maximum width needed for labels
-        max_label_width = max([len(subject) for subject in subject_list]) + 2
+        max_label_width = max([len(subject) for subject in subject_list]) +2
 
         for i, subject in enumerate(subject_list):
-            tk.Label(subject_frame, text=subject, width=max_label_width, font=('Arial', 12),justify=LEFT).grid(row=i + 2, column=0)
+            tk.Label(subject_frame, text=subject.capitalize(), font=('Arial', 12)).grid(row=i + 2, column=0, sticky='w', padx=max_label_width*10, pady=2)
             for j in range(len(terms)):
-                entry = tk.Entry(subject_frame, width=10, font=('Arial', 12))
+                entry = tk.Entry(subject_frame, width=15, font=('Arial', 12))
                 entry.insert('end', '0')  # Set default value to 0
-                entry.grid(row=i + 2, column=j + 1)
+                entry.grid(row=i + 2, column=j + 1, padx = 7, pady = 2)
                 entries.append(entry)
 
         for student in student_data:
@@ -1219,6 +1220,31 @@ def teacher_main(user,window):
             messagebox.showerror("Error","Data is not found!")
             LoginPage(window)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #-------------------------------------------------------------------------------
+
+
+
+
+
+
+
     def add_term2_marks():
 
 
@@ -1229,6 +1255,7 @@ def teacher_main(user,window):
         standard = user[2] + "-" +user[3]
         STANDARD_CLASS = standard.split("-")[0]
         # print(STANDARD_CLASS)
+
 
 
 
@@ -1255,6 +1282,67 @@ def teacher_main(user,window):
         print(subject_list)
         # Assuming you have a list of subjects for a particular standard
         # subject_list = ['english', 'hindi' , 'maths', 'evs', 'gujarati', 'computer', 'gk']
+
+
+
+        #----------------------------------------------------------------------------
+
+
+        # def term1_marks_added(STANDARD_CLASS):
+        #     try:
+        #         # Query to fetch term 1 marks data for a specific student
+
+        #         check_term_1_query = '''
+                
+        #         SELECT attendence_1, out_of_1, work_education_1,
+        #         art_education_1,health_physical_education_1, 
+        #         discipline_1, height_in_cm_1, weight_in_kg_1, 
+        #         remarks_1,
+        #         '''
+                
+        #         for index, subject in enumerate(subject_list):
+        #             # Construct column names dynamically based on subject
+        #             pt1_column = f'{subject}_pt_1,'
+        #             nb_1_column = f'{subject}_nb_1,'
+        #             sea_1_column = f'{subject}_sea_1,'
+        #             half_yearly_column = f'{subject}_half_yearly'
+
+        #             check_term_1_query = check_term_1_query + f"{pt1_column} {nb_1_column} {sea_1_column} {half_yearly_column}"
+        #             # Check if it's the last subject, if not, add a comma
+        #             if index < len(subject_list) - 1:
+        #                 check_term_1_query += ','
+
+        #         check_term_1_query = check_term_1_query + f" FROM `{STANDARD_CLASS}`"
+
+        #         print(check_term_1_query)
+        #         cur.execute(check_term_1_query)
+        #         term1_marks_data = cur.fetchall()
+
+        #         for individual_data in term1_marks_data: 
+        #             # Check if any of the required columns contain NULL values
+        #             if any(value is None for value in individual_data):
+        #                 print(individual_data)
+        #                 any_student_is_not_added = False  # Term 1 marks not added
+        #             else :
+        #                 any_student_is_not_added = True  # Term 1 marks added
+
+        #         return any_student_is_not_added
+
+        #     except con.Error as err:
+        #         print(f"Error: {err}")
+        #         return False  # Return False in case of any error
+
+
+
+        # if not term1_marks_added(STANDARD_CLASS):
+        #     print("Term 1 marks are not added yet.")
+        #     messagebox.showerror("Error","Term 1 marks are not added yet!")
+        # else:
+        #     print("Term 1 marks are added.")
+
+
+        #----------------------------------------------------------------------------
+
 
         # Generate column definitions for each subject
         column_definitions = []
@@ -1475,7 +1563,7 @@ def teacher_main(user,window):
                     pass 
 
 
-        def update_attendance(attendance_value,out_of_entry_value,height_entry_value,weight_entry_value,work_edu_value,art_edu_value,hp_edu_value,discipline_value,remarks_value,current_gr_no):    
+        def update_attendance(attendance_value,out_of_entry_value,height_entry_value,weight_entry_value,work_edu_value,art_edu_value,hp_edu_value,discipline_value,remarks_value,current_gr_no):
             # Defining the query to update attendance in the table for the current student
             update_query = f'''
             UPDATE `{STANDARD_CLASS}` 
@@ -1529,17 +1617,17 @@ def teacher_main(user,window):
                 # Loop through the subject list to dynamically construct the SET clause of the update query
                 for index, subject in enumerate(subject_list):
                     # Construct column names dynamically based on subject
-                    pt1_column = f'{subject}_pt_2'
-                    nb_1_column = f'{subject}_nb_2'
-                    sea_1_column = f'{subject}_sea_2'
-                    half_yearly_column = f'{subject}_annual_yearly'
+                    pt2_column = f'{subject}_pt_2'
+                    nb_2_column = f'{subject}_nb_2'
+                    sea_2_column = f'{subject}_sea_2'
+                    annual_yearly_column = f'{subject}_annual_yearly'
 
                     # Append the dynamically constructed column names and placeholders to the update query
                     update_query += f'''
-                    {pt1_column} = '{marks_data[subject_list.index(subject) * 4]}',
-                    {nb_1_column} = '{marks_data[subject_list.index(subject) * 4 + 1]}',
-                    {sea_1_column} = '{marks_data[subject_list.index(subject) * 4 + 2]}',
-                    {half_yearly_column} = '{marks_data[subject_list.index(subject) * 4 + 3]}'
+                    {pt2_column} = '{marks_data[subject_list.index(subject) * 4]}',
+                    {nb_2_column} = '{marks_data[subject_list.index(subject) * 4 + 1]}',
+                    {sea_2_column} = '{marks_data[subject_list.index(subject) * 4 + 2]}',
+                    {annual_yearly_column} = '{marks_data[subject_list.index(subject) * 4 + 3]}'
                     '''
                     # Check if it's the last subject, if not, add a comma
                     if index < len(subject_list) - 1:
@@ -1622,11 +1710,12 @@ def teacher_main(user,window):
         subject_frame.place(relx=0.02, rely=0.15, relwidth=0.96, relheight=0.4)
 
         tk.Label(subject_frame, text="Scholastic Areas", width=20, font=('Arial', 14)).grid(row=0, column=0)
+        tk.Label(subject_frame, text="TERM - 2 ", width=20, font=('Arial', 14)).grid(row=0, column=2,columnspan=2)
         tk.Label(subject_frame, text="Subjects", width=20, font=('Arial', 14)).grid(row=1, column=0)
 
         terms = ["PT 2", "N.B", "SEA", "HALF YEARLY"]
         for j, term in enumerate(terms):
-            tk.Label(subject_frame, text=term, width=10, font=('Arial', 12)).grid(row=1, column=j + 1)
+            tk.Label(subject_frame, text=term, width=15, font=('Arial', 12)).grid(row=1, column=j + 1)
 
 
 
@@ -1635,11 +1724,11 @@ def teacher_main(user,window):
         max_label_width = max([len(subject) for subject in subject_list]) + 2
 
         for i, subject in enumerate(subject_list):
-            tk.Label(subject_frame, text=subject, width=max_label_width, font=('Arial', 12),justify=LEFT).grid(row=i + 2, column=0)
+            tk.Label(subject_frame, text=subject.capitalize(), font=('Arial', 12)).grid(row=i + 2, column=0, sticky='w', padx=max_label_width*10, pady=2)
             for j in range(len(terms)):
-                entry = tk.Entry(subject_frame, width=10, font=('Arial', 12))
+                entry = tk.Entry(subject_frame, width=15, font=('Arial', 12))
                 entry.insert('end', '0')  # Set default value to 0
-                entry.grid(row=i + 2, column=j + 1)
+                entry.grid(row=i + 2, column=j + 1, padx=7, pady=2)
                 entries.append(entry)
 
         for student in student_data:
