@@ -485,7 +485,7 @@ def admin_main(window):
         username_entry = AutocompleteEntry(MAIN_FRAME, width=entry_width, completevalues=username_list, font=entry_font)
         username_entry.place(x=side_space + label_width + space_between, y=30)
 
-        password_entry = Entry(MAIN_FRAME, width=entry_width, bg="#FFFFF0", font=entry_font)
+        password_entry = Entry(MAIN_FRAME,show="*", width=entry_width, bg="#FFFFF0", font=entry_font)
         password_entry.place(x=side_space + label_width + space_between, y=80)
 
         class_entry = ttk.Combobox(MAIN_FRAME, state="readonly", values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10','11 COMM','11 SCI','12 COMM','12 SCI'], width=entry_width, font=entry_font)
@@ -760,9 +760,53 @@ def teacher_main(user,window):
         def process_data(current_gr_no):
             global current_index
             # print(current_index)
+
+            # Validate marks before updating the database
             
+            # If next_button text is "Next", update attendance and marks
             if next_button['text'] == "Next":
-                # Update attendance before updating marks
+                # Fetch the marks data from the entry fields
+                marks_data = []
+                for entry in entries:
+                    marks_data.append(entry.get())
+
+                # Define the validation ranges for each column
+                validation_ranges = {
+                    'pt 1': (0, 20),
+                    'nb 1': (0, 20),
+                    'sea 1': (0, 20),
+                    'hf': (0, 80)  # Assuming 'hf' has a different range, you can adjust this as needed
+                }
+
+                # Iterate over the marks_data list and validate each column
+                for i in range(0, len(marks_data), 4):
+                    pt_1_value = int(marks_data[i])
+                    nb_1_value = int(marks_data[i+1])
+                    sea_1_value = int(marks_data[i+2])
+                    hf_value = int(marks_data[i+3])
+
+                    # Validate 'pt 1' marks
+                    if not validation_ranges['pt 1'][0] <= pt_1_value <= validation_ranges['pt 1'][1]:
+                        messagebox.showerror('Error', f"Invalid PT 1 Marks, expected range: {validation_ranges['pt 1']}, got: {pt_1_value}")
+                        return
+                    
+                    # Validate 'nb 1' marks
+                    if not validation_ranges['nb 1'][0] <= nb_1_value <= validation_ranges['nb 1'][1]:
+                        messagebox.showerror('Error', f"Invalid NB 1 Marks, expected range: {validation_ranges['nb 1']}, got: {nb_1_value}")
+                        return
+                    
+                    # Validate 'sea 1' marks
+                    if not validation_ranges['sea 1'][0] <= sea_1_value <= validation_ranges['sea 1'][1]:
+                        messagebox.showerror('Error', f"Invalid SEA 1 Marks, expected range: {validation_ranges['sea 1']}, got: {sea_1_value}")
+                        return
+                    
+                    # Validate 'hf' marks
+                    if not validation_ranges['hf'][0] <= hf_value <= validation_ranges['hf'][1]:
+                        messagebox.showerror('Error', f"Invalid HALF YEARLY Marks, expected range: {validation_ranges['hf']}, got: {hf_value}")
+                        return
+
+                # If marks validation passes, proceed to update the marks
+                update_marks_if_gr_no_matches(current_gr_no)
                 attendance_value = attendance_entry.get()
                 out_of_entry_value = out_of_entry.get()
                 height_entry_value = height_entry.get()
@@ -773,9 +817,9 @@ def teacher_main(user,window):
                 discipline_value = discipline_entry.get()
                 remarks_value = remarks_entry.get()
                 update_attendance(attendance_value,out_of_entry_value,height_entry_value,weight_entry_value,work_edu_value,art_edu_value,hp_edu_value,discipline_value,remarks_value,current_gr_no)
-                update_marks_if_gr_no_matches(current_gr_no)
+                # update_marks_if_gr_no_matches(current_gr_no)
                 
-
+                
             # Update visibility of the "Next" button
             if current_index == len(student_data) -1:
                 try:
@@ -969,7 +1013,8 @@ def teacher_main(user,window):
                 #print(marks_data)
                 for entry in entries:
                     marks_data.append(entry.get())
-                    
+                
+                # print(marks_data)
 
                 # Initialize the update query
                 update_query = f'''
