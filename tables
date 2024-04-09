@@ -1,4 +1,6 @@
-create table teachers(TUSERNAME varchar(200), TPASSWORD varchar(100), CLASS varchar(100), DIVISION varchar(10), isApproved int, primary key (TUSERNAME));
+create table teachers(TUSERNAME varchar(200), TPASSWORD varchar(100), TEMAIL varchar(100), CLASS varchar(100), DIVISION varchar(10), isApproved int, primary key (TUSERNAME));
+insert into teachers values("admin","Admin@321",NULL,NULL,NULL,1);
+
 
 create table standard_wise_subjects(STANDARD varchar(50),subjects VARCHAR(500));
 insert into standard_wise_subjects values('1',"['english','hindi','maths','evs','gujarati','computer','gk']");

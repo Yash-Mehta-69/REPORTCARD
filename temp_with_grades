@@ -1181,20 +1181,12 @@ def teacher_main(user,window):
         title_frame.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
 
        # Add a heading label to the title frame
-        heading_label = tk.Label(title_frame, text="TERM 1 MARKS DATA ENTRY", font=("Arial", 15, "bold"))
-        heading_label.pack(side="top", padx=10, pady=11)
+        heading_label = tk.Label(title_frame, text="TERM 1 MARKS DATA ENTRY", font=("Arial", 16, "bold"))
+        heading_label.pack(side="top", padx=10, pady=12)
 
         # Add a teacher label to the title frame
-        teacher_label = tk.Label(title_frame, text=f"Class Teacher : {user[0].capitalize()}", font=("Arial", 10))
-        teacher_label.pack(side="left", padx=30, pady=5)
-
-
-        def logout_function():
-            LoginPage(window)
-
-        # Create a button for logout
-        logout_button = tk.Button(title_frame, text="Logout", command=logout_function)
-        logout_button.pack(side="right", padx=30, pady=5)
+        teacher_label = tk.Label(title_frame, text=f"USER : {user[0].capitalize()}", font=("Arial", 10))
+        teacher_label.pack(side="right", padx=30, pady=5)
 
         student_data_query = f'''
         SELECT 
