@@ -832,10 +832,10 @@ def teacher_main(user,window):
                     hf_value = marks_data[i+3]
                     # grade_value = marks_data[i+4]
 
-                    print("pt1",pt_1_value)
-                    print("nb1",nb_1_value)
-                    print("sea1",sea_1_value)
-                    print("hf",hf_value)
+                    # print("pt1",pt_1_value)
+                    # print("nb1",nb_1_value)
+                    # print("sea1",sea_1_value)
+                    # print("hf",hf_value)
                     # print("grade",grade_value)
 
                 
@@ -1162,7 +1162,7 @@ def teacher_main(user,window):
                 '''
 
                 # Print or execute the update_query
-                print(update_query)
+                # print(update_query)
                 cur.execute(update_query)
                 mydb.commit()
 
@@ -1180,21 +1180,34 @@ def teacher_main(user,window):
         title_frame = tk.Frame(MAIN_FRAME)
         title_frame.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.1)
 
-       # Add a heading label to the title frame
-        heading_label = tk.Label(title_frame, text="TERM 1 MARKS DATA ENTRY", font=("Arial", 15, "bold"))
-        heading_label.pack(side="top", padx=10, pady=11)
+        # Add a heading label to the title frame
+        heading_label = tk.Label(title_frame, text="TERM 1 MARKS DATA ENTRY", font=("Arial", 20, "bold"))
+        heading_label.place(relx=0.5, rely=0.5, anchor="center")
 
         # Add a teacher label to the title frame
-        teacher_label = tk.Label(title_frame, text=f"Class Teacher : {user[0].capitalize()}", font=("Arial", 10))
-        teacher_label.pack(side="left", padx=30, pady=5)
-
+        teacher_label = tk.Label(title_frame, text=f"Class Teacher : {user[0].capitalize()}", font=("Arial", 10, "bold"))
+        teacher_label.place(relx=0.02, rely=0.75, anchor="w")
 
         def logout_function():
             LoginPage(window)
 
-        # Create a button for logout
-        logout_button = tk.Button(title_frame, text="Logout", command=logout_function)
-        logout_button.pack(side="right", padx=30, pady=5)
+        # Load the image for the logout button
+        logout_image = Image.open(r"images\logout.png")  # Replace "logout_image.png" with the actual path to your image
+
+        # Resize the image to your desired dimensions
+        width, height = 50, 50  # Example dimensions, replace with your desired dimensions
+        resized_image = logout_image.resize((width, height), Image.ANTIALIAS)
+
+        # Convert the resized image to a format that Tkinter can use
+        tk_image = ImageTk.PhotoImage(resized_image)
+        
+
+        # Create a button for logout with the image
+        logout_button = tk.Button(title_frame, image=tk_image, command=logout_function)
+        logout_button.place(relx=0.99, rely=0.60, anchor="e")  # Adjust the placement as needed
+        logout_button.image = tk_image  # Keep a reference to the image to prevent garbage collection
+        
+
 
         student_data_query = f'''
         SELECT 
@@ -1328,7 +1341,7 @@ def teacher_main(user,window):
                     grade_entry = grade_entries[i]
                     grade_entry.delete(0, 'end')
                     grade_entry.insert(0, grade)
-                    print("grade entry : ",grade_entry," : grade : ",grade)
+                    # print("grade entry : ",grade_entry," : grade : ",grade)
                     if grade == "E":
                         grade_entry.config(background= "red")  # Set background color if "E"
                         grade_entry.config(disabledbackground= "red")  # Set background color if "E"
@@ -1349,9 +1362,9 @@ def teacher_main(user,window):
 
             
             # Print or return the subject-wise grades
-            print("Subject-wise grades:")
+            # print("Subject-wise grades:")
             for subject, grade in subject_totals.items():
-                print(f"{subject}: {grade}")
+                # print(f"{subject}: {grade}")
 
                 if grade == "E" : 
                     messagebox.showinfo("INFO",f"Student is FAILED in {subject}, grade: {grade}")
@@ -1425,7 +1438,7 @@ def teacher_main(user,window):
                     grade_entries.append(entry)
 
 
-        print("pt 1",pt_1_entries,"nb 1",nb_1_entries,"sea 1",sea_1_entries,"hf 1",half_yr_entries,"grade",grade_entries)
+        # print("pt 1",pt_1_entries,"nb 1",nb_1_entries,"sea 1",sea_1_entries,"hf 1",half_yr_entries,"grade",grade_entries)
 
 
 
