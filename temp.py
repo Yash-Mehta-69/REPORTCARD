@@ -177,14 +177,7 @@ class LoginPage:
                             bg='#3047ff', cursor='hand2', command = login_users,activebackground='#3047ff', fg='white')
         self.login.place(x=20, y=10)
 
-        # ========================================================================
-        # ============================Forgot password=============================
-        # ========================================================================
-        self.forgot_button = Button(self.lgn_frame, text="Forgot Password ?",
-                                    font=("yu gothic ui", 13, "bold underline"), fg="#4f4e4d", relief=FLAT,
-                                    activebackground="#FFFFF0"
-                                    , borderwidth=0, background="#FFFFF0", cursor="hand2")
-        self.forgot_button.place(x=630, y=520)
+
 
         # ========================================================================
         # =========== Sign Up ==================================================
@@ -583,7 +576,28 @@ def admin_main(window):
 
         # Save button
         save_button = Button(MAIN_FRAME, text="Save", command=save_details, bg="#3047ff", fg="white", width=10, font=('Arial', 20))
-        save_button.place(x=main_frame_center_x - 50, y=270)
+        save_button.place(x=main_frame_center_x - 50, y=300)
+
+        def forgot_pass():
+            entered_username = username_entry.get()
+            if not entered_username:
+                messagebox.showerror("Error!", "Username cannot be empty!")
+            else:
+                import random
+                generated_pass = ""
+                for _ in range(8): # Use for loop
+                    generated_pass += str(random.randint(0, 9)) 
+
+                print(generated_pass)
+                # return generated_pass
+
+        # ========================================================================
+        # ============================Forgot password=============================
+        # ========================================================================
+        forgot_button = Button(MAIN_FRAME, text="Forgot Password ?", 
+                               bg="#3047ff", fg="white", command = forgot_pass,
+                               font=('Arial', 20), activebackground="#3047ff", cursor="hand2")
+        forgot_button.place(x=main_frame_center_x - 100, y=400)
 
 
 
